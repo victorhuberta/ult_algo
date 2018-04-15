@@ -1,0 +1,7 @@
+[package]
+name = "ult_algo"
+version = "0.1.0"
+authors = ["Victor Huberta <victorhuberta@gmail.com>"]
+
+[dependencies]
+bit-vec = "0.4.4"
