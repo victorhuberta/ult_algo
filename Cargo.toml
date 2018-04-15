@@ -5,3 +5,10 @@ authors = ["Victor Huberta <victorhuberta@gmail.com>"]
 
 [dependencies]
 bit-vec = "0.4.4"
+
+[dev-dependencies]
+criterion = "0.2"
+
+[[bench]]
+name = "benchmark"
+harness = false
