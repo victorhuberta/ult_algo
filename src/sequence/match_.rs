@@ -154,6 +154,13 @@ mod levenshtein_distance_tests {
     }
 
     #[test]
+    fn receives_integer_vectors() {
+        let source: Vec<u32> = (1..50).collect();
+        let target: Vec<u32> = (4..40).collect();
+        assert_eq!(levenshtein_distance(&source, &target), 13);
+    }
+
+    #[test]
     fn receives_empty_source() {
         let source: Vec<char> = vec![];
         let target: Vec<char> = "sitting".chars().collect();
