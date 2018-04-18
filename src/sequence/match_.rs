@@ -5,7 +5,9 @@
 use bit_vec::BitVec;
 use std::cmp;
 
-/// Exactly matches a pattern over the given sequence with the bitap algorithm.
+/// # [Bitap Algorithm](https://en.wikipedia.org/wiki/Bitap_algorithm)
+///
+/// Exactly matches a pattern over the given sequence using bitwise operations.
 ///
 /// # Examples
 ///
@@ -91,6 +93,8 @@ mod bitap_tests {
     }
 }
 
+/// # [Levenshtein Edit Distance](https://en.wikipedia.org/wiki/Levenshtein_distance)
+///
 /// Calculates the minimum edit distance between two sequences.
 ///
 /// # Examples
