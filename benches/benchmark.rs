@@ -1,8 +1,10 @@
 #[macro_use]
 extern crate criterion;
+extern crate rand;
 extern crate ult_algo;
 
 use criterion::Criterion;
+use rand::Rng;
 use ult_algo::sequence;
 
 fn sequence_benchmark(c: &mut Criterion) {
@@ -16,6 +18,12 @@ fn sequence_benchmark(c: &mut Criterion) {
     let target: Vec<char> = "kittens love sitting on the knit of my scarf in my kitchen".chars().collect();
     c.bench_function("sequence::match_::levenshtein_distance(&source, &target)", move |b| {
         b.iter(|| sequence::match_::levenshtein_distance(&source, &target))
+    });
+
+    c.bench_function("sequence::selection::quick_smallest(&mut sequence, k)", |b| {
+        let mut sequence_: Vec<i32> = (-100..100).collect();
+        rand::thread_rng().shuffle(&mut sequence_);
+        b.iter(|| *sequence::selection::quick_smallest(&mut sequence_, 100))
     });
 }
 
