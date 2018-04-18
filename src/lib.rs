@@ -2,6 +2,7 @@
 //!
 //! A library that hosts algorithms of many kinds.
 
+extern crate rand;
 extern crate bit_vec;
 
 pub mod sequence;

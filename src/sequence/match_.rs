@@ -20,7 +20,7 @@ use std::cmp;
 /// ```
 ///
 /// If the pattern does not match, it returns -1.
-pub fn bitap<T: PartialEq>(sequence: &[T], pattern: &[T]) -> i32 {
+pub fn bitap<T: PartialEq>(sequence: &[T], pattern: &[T]) -> i64 {
     let (pat_len, seq_len) = (pattern.len(), sequence.len());
     if pat_len == 0 {
         return 0; // empty pattern matches everything
@@ -38,7 +38,7 @@ pub fn bitap<T: PartialEq>(sequence: &[T], pattern: &[T]) -> i32 {
         }
 
         if bit_arr[pat_len] {
-            return (i-pat_len+1) as i32; // found a match
+            return (i-pat_len+1) as i64; // found a match
         }
     }
     return -1; // no match found
@@ -102,19 +102,19 @@ mod bitap_tests {
 /// let target: Vec<char> = "kitten".chars().collect();
 /// assert_eq!(match_::levenshtein_distance(&source, &target), 3);
 /// ```
-pub fn levenshtein_distance<T: PartialEq>(source: &[T], target: &[T]) -> u32 {
+pub fn levenshtein_distance<T: PartialEq>(source: &[T], target: &[T]) -> u64 {
     let (m, n) = (source.len()+1, target.len()+1);
     // distances[i][j] holds the edit distance for the first i source chars and j target chars;
     // the distances matrix has the size of m*n.
-    let mut distances = vec![vec![0u32; n]; m];
+    let mut distances = vec![vec![0u64; n]; m];
 
     // Source prefixes can be transformed into empty string by dropping all chars.
     for i in 1..m {
-        distances[i][0] = i as u32;
+        distances[i][0] = i as u64;
     }
     // Empty string can be transformed into target prefixes by inserting every char.
     for j in 1..n {
-        distances[0][j] = j as u32;
+        distances[0][j] = j as u64;
     }
 
     for j in 1..n {
@@ -155,8 +155,8 @@ mod levenshtein_distance_tests {
 
     #[test]
     fn receives_integer_vectors() {
-        let source: Vec<u32> = (1..50).collect();
-        let target: Vec<u32> = (4..40).collect();
+        let source: Vec<u64> = (1..50).collect();
+        let target: Vec<u64> = (4..40).collect();
         assert_eq!(levenshtein_distance(&source, &target), 13);
     }
 
@@ -164,13 +164,13 @@ mod levenshtein_distance_tests {
     fn receives_empty_source() {
         let source: Vec<char> = vec![];
         let target: Vec<char> = "sitting".chars().collect();
-        assert_eq!(levenshtein_distance(&source, &target), target.len() as u32);
+        assert_eq!(levenshtein_distance(&source, &target), target.len() as u64);
     }
 
     #[test]
     fn receives_empty_target() {
         let source: Vec<char> = "sitting".chars().collect();
         let target: Vec<char> = vec![];
-        assert_eq!(levenshtein_distance(&source, &target), source.len() as u32);
+        assert_eq!(levenshtein_distance(&source, &target), source.len() as u64);
     }
 }

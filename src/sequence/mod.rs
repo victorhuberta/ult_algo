@@ -3,6 +3,7 @@
 //! A collection of modules containing sequence algorithms.
 
 pub mod match_;
+pub mod selection;
 // pub mod search;
 // pub mod merge;
 // pub mod permutation;
