@@ -25,6 +25,10 @@ fn sequence_benchmark(c: &mut Criterion) {
         rand::thread_rng().shuffle(&mut sequence_);
         b.iter(|| *sequence::selection::quick_smallest(&mut sequence_, 100))
     });
+
+    c.bench_function("sequence::search::ternary(|x| x.powf(x), 50.0, 1000.0, 0.0001)", |b| {
+        b.iter(|| sequence::search::ternary(|x| x.powf(x), 50.0, 1000.0, 0.0001))
+    });
 }
 
 criterion_group!(benches, sequence_benchmark);
