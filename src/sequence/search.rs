@@ -2,23 +2,83 @@
 //!
 //! A collection of functions to search for a value from a sequence/function.
 
-/// # [Ternary Search](https://en.wikipedia.org/wiki/ternary)
+/// Enumerates the kinds of a search target.
+pub enum SearchTarget {
+    Minimum,
+    Maximum
+}
+
+/// # [Ternary Maximum](https://en.wikipedia.org/wiki/ternary)
 ///
-/// Finds the maximum of a [unimodal](https://en.wikipedia.org/wiki/Unimodality#Unimodal_function) function.
+/// Finds the maximum of a
+///  [unimodal](https://en.wikipedia.org/wiki/Unimodality#Unimodal_function) function.
 ///
 /// # Examples
 ///
 /// ```
 /// use ult_algo::sequence::search;
 ///
-/// let local_maximum = search::ternary(|x| x % 5.0, 25.4, 30.1, 0.05);
-/// assert_eq!(local_maximum as u64, 29);
+/// let local_maximum = search::ternary_max(|x| x % 5.0, 25.4, 30.1, 0.05);
+/// assert_eq!(local_maximum, 29.990194395991274);
 /// ```
 ///
 /// # Panics
 ///
 /// Case #1: Absolute precision is smaller than 1e-14
-pub fn ternary<F>(f: F, mut left: f64, mut right: f64, absolute_precision: f64) -> f64
+pub fn ternary_max<F>(f: F, left: f64, right: f64, absolute_precision: f64) -> f64
+    where F: Fn(f64) -> f64
+{
+    return ternary(SearchTarget::Maximum, f, left, right, absolute_precision);
+}
+
+/// # [Ternary Minimum](https://en.wikipedia.org/wiki/ternary)
+///
+/// Finds the minimum of a
+///  [unimodal](https://en.wikipedia.org/wiki/Unimodality#Unimodal_function) function.
+///
+/// # Examples
+///
+/// ```
+/// use ult_algo::sequence::search;
+///
+/// let local_minimum = search::ternary_min(|x| x % 5.0, 25.4, 30.1, 0.05);
+/// assert_eq!(local_minimum, 25.41811226457876);
+/// ```
+///
+/// # Panics
+///
+/// Case #1: Absolute precision is smaller than 1e-14
+pub fn ternary_min<F>(f: F, left: f64, right: f64, absolute_precision: f64) -> f64
+    where F: Fn(f64) -> f64
+{
+    return ternary(SearchTarget::Minimum, f, left, right, absolute_precision);
+}
+
+/// # [Ternary](https://en.wikipedia.org/wiki/ternary)
+///
+/// Finds the minimum or maximum of a
+///  [unimodal](https://en.wikipedia.org/wiki/Unimodality#Unimodal_function) function.
+///
+/// # Examples
+///
+/// ```
+/// use ult_algo::sequence::search;
+///
+/// let search_target = search::SearchTarget::Maximum;
+/// let local_maximum = search::ternary(search_target, |x| x % 5.0, 25.4, 30.1, 0.05);
+/// assert_eq!(local_maximum, 29.990194395991274);
+/// ```
+///
+/// # Panics
+///
+/// Case #1: Absolute precision is smaller than 1e-14
+pub fn ternary<F>(
+    search_target: SearchTarget,
+    f: F,
+    mut left: f64,
+    mut right: f64,
+    absolute_precision: f64
+) -> f64
     where F: Fn(f64) -> f64
 {
     // Ensure that the loop always ends.
@@ -34,7 +94,12 @@ pub fn ternary<F>(f: F, mut left: f64, mut right: f64, absolute_precision: f64) 
         let left_third = left + (right-left)/3f64;
         let right_third = right - (right-left)/3f64;
 
-        if f(left_third) < f(right_third) {
+        // Continue based on minimum or maximum search.
+        let result_comparison = match search_target {
+            SearchTarget::Minimum => f(left_third) > f(right_third),
+            SearchTarget::Maximum => f(left_third) < f(right_third)
+        };
+        if result_comparison {
             left = left_third;
         } else {
             right = right_third;
@@ -44,36 +109,66 @@ pub fn ternary<F>(f: F, mut left: f64, mut right: f64, absolute_precision: f64) 
 
 #[cfg(test)]
 mod ternary_tests {
-    use super::ternary;
+    use super::*;
 
     #[test]
-    fn receives_mod_function() {
-        assert_eq!(ternary(|x| x % 5.0, 25.4, 30.1, 0.05) as u64, 29);
+    fn finds_max_and_receives_mod_function() {
+        let search_target = SearchTarget::Maximum;
+        assert_eq!(ternary(search_target, |x| x % 5.0, 25.4, 30.1, 0.05), 29.990194395991274);
     }
 
     #[test]
-    fn receives_power_function() {
-        assert_eq!(ternary(|x| x.powf(x), 25.4, 30.1, 0.00001).ceil(), 31.0);
+    fn finds_max_and_receives_power_function() {
+        let search_target = SearchTarget::Maximum;
+        assert_eq!(ternary(search_target, |x| x.powf(x), 25.4, 30.1, 0.00001), 30.099996368748634);
     }
 
     #[test]
-    fn receives_smaller_right() {
-        assert_eq!(ternary(|x| x % 5.0, 30.1, 25.4, 0.05) as u64, 29);
+    fn finds_max_and_receives_smaller_right() {
+        let search_target = SearchTarget::Maximum;
+        assert_eq!(ternary(search_target, |x| x % 5.0, 30.1, 25.4, 0.05), 29.990194395991274);
     }
 
     #[test]
-    fn receives_negative_left_or_right() {
-        assert_eq!(ternary(|x| x % 5.0, 30.1, -25.4, 0.05) as u64, 14);
+    fn finds_max_and_receives_negative_left_or_right() {
+        let search_target = SearchTarget::Maximum;
+        assert_eq!(ternary(search_target, |x| x % 5.0, 30.1, -25.4, 0.05), 14.983253353180297);
     }
 
     #[test]
-    fn receives_negative_left_and_right() {
-        assert_eq!(ternary(|x| x % 5.0, -30.1, -25.4, 0.05) as u64, 14);
+    fn finds_max_and_receives_negative_left_and_right() {
+        let search_target = SearchTarget::Maximum;
+        assert_eq!(ternary(search_target, |x| x % 5.0, -30.1, -25.4, 0.05), -25.41811226457876);
+    }
+
+    #[test]
+    fn finds_min_and_receives_power_function() {
+        let search_target = SearchTarget::Minimum;
+        assert_eq!(ternary(search_target, |x| x.powf(x), 25.4, 30.1, 0.00001), 25.400003631251366);
+    }
+
+    #[test]
+    fn finds_min_and_receives_smaller_right() {
+        let search_target = SearchTarget::Minimum;
+        assert_eq!(ternary(search_target, |x| x % 5.0, 30.1, 25.4, 0.05), 25.41811226457876);
+    }
+
+    #[test]
+    fn finds_min_and_receives_negative_left_or_right() {
+        let search_target = SearchTarget::Minimum;
+        assert_eq!(ternary(search_target, |x| x % 5.0, 30.1, -25.4, 0.05), -9.985704278536492);
+    }
+
+    #[test]
+    fn finds_min_and_receives_negative_left_and_right() {
+        let search_target = SearchTarget::Minimum;
+        assert_eq!(ternary(search_target, |x| x % 5.0, -30.1, -25.4, 0.05), -29.990194395991274);
     }
 
     #[test]
     #[should_panic(expected = "absolute precision is too small")]
     fn receives_very_small_abs_precision() {
-        ternary(|x| x % 5.0, 30.1, 25.4, 1e-15);
+        let search_target = SearchTarget::Maximum;
+        ternary(search_target, |x| x % 5.0, 30.1, 25.4, 1e-15);
     }
 }
