@@ -1,11 +1,11 @@
-#[macro_use]
-extern crate criterion;
+#[macro_use] extern crate criterion;
 extern crate rand;
-extern crate ult_algo;
+#[macro_use] extern crate ult_algo;
 
 use criterion::Criterion;
 use rand::Rng;
 use ult_algo::sequence;
+include_sequence_search!();
 
 fn sequence_benchmark(c: &mut Criterion) {
     let sequence_: Vec<i32> = (-100..100).collect();
@@ -33,12 +33,12 @@ fn sequence_benchmark(c: &mut Criterion) {
         })
     });
 
-    c.bench_function("sequence::search::ternary_min(|x| x.powf(x), 50.0, 1000.0, 0.0001)", |b| {
-        b.iter(|| sequence::search::ternary_min(|x| x.powf(x), 50.0, 1000.0, 0.0001))
+    c.bench_function("sequence::search::ternary_min!(|x| x.powf(x), 50.0, 1000.0, 0.0001)", |b| {
+        b.iter(|| ternary_min!(|x| x.powf(x), 50.0, 1000.0, 0.0001))
     });
 
-    c.bench_function("sequence::search::ternary_max(|x| x.powf(x), 50.0, 1000.0, 0.0001)", |b| {
-        b.iter(|| sequence::search::ternary_max(|x| x.powf(x), 50.0, 1000.0, 0.0001))
+    c.bench_function("sequence::search::ternary_max!(|x| x.powf(x), 50.0, 1000.0, 0.0001)", |b| {
+        b.iter(|| ternary_max!(|x| x.powf(x), 50.0, 1000.0, 0.0001))
     });
 }
 

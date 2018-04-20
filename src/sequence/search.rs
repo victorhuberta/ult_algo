@@ -2,10 +2,12 @@
 //!
 //! A collection of functions to search for a value from a sequence/function.
 
-/// Enumerates the kinds of a search target.
-pub enum SearchTarget {
-    Minimum,
-    Maximum
+/// Brings all sequence search types and functions required by macros into scope.
+#[macro_export]
+macro_rules! include_sequence_search {
+    () => {
+        use ult_algo::sequence::search::{SearchTarget, ternary};
+    };
 }
 
 /// # [Ternary Maximum](https://en.wikipedia.org/wiki/ternary)
@@ -16,19 +18,25 @@ pub enum SearchTarget {
 /// # Examples
 ///
 /// ```
-/// use ult_algo::sequence::search;
+/// #[macro_use]
+/// extern crate ult_algo;
 ///
-/// let local_maximum = search::ternary_max(|x| x % 5.0, 25.4, 30.1, 0.05);
-/// assert_eq!(local_maximum, 29.990194395991274);
+/// include_sequence_search!();
+///
+/// fn main() {
+///     let local_maximum = ternary_max!(|x| x % 5.0, 25.4, 30.1, 0.05);
+///     assert_eq!(local_maximum, 29.990194395991274);
+/// }
 /// ```
 ///
 /// # Panics
 ///
-/// Case #1: Absolute precision is smaller than 1e-14
-pub fn ternary_max<F>(f: F, left: f64, right: f64, absolute_precision: f64) -> f64
-    where F: Fn(f64) -> f64
-{
-    return ternary(SearchTarget::Maximum, f, left, right, absolute_precision);
+/// Case 1: Absolute precision is smaller than 1e-14
+#[macro_export]
+macro_rules! ternary_max {
+    ($f:expr, $left:expr, $right:expr, $absolute_precision:expr) => {
+        ternary(SearchTarget::Maximum, $f, $left, $right, $absolute_precision)
+    };
 }
 
 /// # [Ternary Minimum](https://en.wikipedia.org/wiki/ternary)
@@ -39,19 +47,25 @@ pub fn ternary_max<F>(f: F, left: f64, right: f64, absolute_precision: f64) -> f
 /// # Examples
 ///
 /// ```
-/// use ult_algo::sequence::search;
+/// #[macro_use]
+/// extern crate ult_algo;
 ///
-/// let local_minimum = search::ternary_min(|x| x % 5.0, 25.4, 30.1, 0.05);
-/// assert_eq!(local_minimum, 25.41811226457876);
+/// include_sequence_search!();
+///
+/// fn main() {
+///     let local_minimum = ternary_min!(|x| x % 5.0, 25.4, 30.1, 0.05);
+///     assert_eq!(local_minimum, 25.41811226457876);
+/// }
 /// ```
 ///
 /// # Panics
 ///
-/// Case #1: Absolute precision is smaller than 1e-14
-pub fn ternary_min<F>(f: F, left: f64, right: f64, absolute_precision: f64) -> f64
-    where F: Fn(f64) -> f64
-{
-    return ternary(SearchTarget::Minimum, f, left, right, absolute_precision);
+/// Case 1: Absolute precision is smaller than 1e-14
+#[macro_export]
+macro_rules! ternary_min {
+    ($f:expr, $left:expr, $right:expr, $absolute_precision:expr) => {
+        ternary(SearchTarget::Minimum, $f, $left, $right, $absolute_precision)
+    };
 }
 
 /// # [Ternary](https://en.wikipedia.org/wiki/ternary)
@@ -71,7 +85,7 @@ pub fn ternary_min<F>(f: F, left: f64, right: f64, absolute_precision: f64) -> f
 ///
 /// # Panics
 ///
-/// Case #1: Absolute precision is smaller than 1e-14
+/// Case 1: Absolute precision is smaller than 1e-14
 pub fn ternary<F>(
     search_target: SearchTarget,
     f: F,
@@ -105,6 +119,12 @@ pub fn ternary<F>(
             right = right_third;
         }
     }
+}
+
+/// Enumerates the kinds of a search target.
+pub enum SearchTarget {
+    Minimum,
+    Maximum
 }
 
 #[cfg(test)]
@@ -170,5 +190,15 @@ mod ternary_tests {
     fn receives_very_small_abs_precision() {
         let search_target = SearchTarget::Maximum;
         ternary(search_target, |x| x % 5.0, 30.1, 25.4, 1e-15);
+    }
+
+    #[test]
+    fn use_ternary_max_macro() {
+        assert_eq!(ternary_max!(|x| x % 5.0, 25.4, 30.1, 0.05), 29.990194395991274);
+    }
+
+    #[test]
+    fn use_ternary_min_macro() {
+        assert_eq!(ternary_min!(|x| x.powf(x), 25.4, 30.1, 0.00001), 25.400003631251366);
     }
 }

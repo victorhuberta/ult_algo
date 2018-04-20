@@ -4,7 +4,7 @@
 
 pub mod match_;
 pub mod selection;
-pub mod search;
+#[macro_use] pub mod search;
 // pub mod merge;
 // pub mod permutation;
 // pub mod alignment;
