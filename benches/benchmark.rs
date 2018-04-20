@@ -26,8 +26,19 @@ fn sequence_benchmark(c: &mut Criterion) {
         b.iter(|| *sequence::selection::quick_smallest(&mut sequence_, 100))
     });
 
-    c.bench_function("sequence::search::ternary(|x| x.powf(x), 50.0, 1000.0, 0.0001)", |b| {
-        b.iter(|| sequence::search::ternary(|x| x.powf(x), 50.0, 1000.0, 0.0001))
+    c.bench_function("sequence::search::ternary(search_target, |x| x.powf(x), 50.0, 1000.0, 0.0001)", |b| {
+        b.iter(|| {
+            sequence::search::ternary(sequence::search::SearchTarget::Maximum,
+                |x| x.powf(x), 50.0, 1000.0, 0.0001)
+        })
+    });
+
+    c.bench_function("sequence::search::ternary_min(|x| x.powf(x), 50.0, 1000.0, 0.0001)", |b| {
+        b.iter(|| sequence::search::ternary_min(|x| x.powf(x), 50.0, 1000.0, 0.0001))
+    });
+
+    c.bench_function("sequence::search::ternary_max(|x| x.powf(x), 50.0, 1000.0, 0.0001)", |b| {
+        b.iter(|| sequence::search::ternary_max(|x| x.powf(x), 50.0, 1000.0, 0.0001))
     });
 }
 
