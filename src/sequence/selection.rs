@@ -30,11 +30,7 @@ pub fn quick_smallest<T: PartialOrd>(list: &mut [T], k: usize) -> &T {
         panic!("k={} should be smaller than list's length", k);
     }
 
-    loop {
-        if list.len() == 1 {
-            return &list[0]; // only one possibility
-        }
-
+    while list.len() != 1 {
         // Randomly choose a pivot and partitions the list accordingly.
         let mut rng = rand::thread_rng();
         let pivot_idx = rng.gen_range(0, list.len());
@@ -49,6 +45,7 @@ pub fn quick_smallest<T: PartialOrd>(list: &mut [T], k: usize) -> &T {
             return quick_smallest(&mut list[pivot_idx+1..], k-pivot_idx-1);
         }
     }
+    &list[0] // only one possibility
 }
 
 #[cfg(test)]

@@ -22,12 +22,12 @@ use std::cmp;
 /// ```
 ///
 /// If the pattern does not match, it returns -1.
-pub fn bitap<T: PartialEq>(sequence: &[T], pattern: &[T]) -> i64 {
+pub fn bitap<T: PartialEq>(sequence: &[T], pattern: &[T]) -> Option<usize> {
     let (pat_len, seq_len) = (pattern.len(), sequence.len());
     if pat_len == 0 {
-        return 0; // empty pattern matches everything
+        return Some(0); // empty pattern matches everything
     } else if pat_len > seq_len {
-        return -1; // longer pattern matches nothing
+        return None; // longer pattern matches nothing
     }
 
     let mut bit_arr = BitVec::from_elem(pat_len+1, false); // init bit array
@@ -40,10 +40,10 @@ pub fn bitap<T: PartialEq>(sequence: &[T], pattern: &[T]) -> i64 {
         }
 
         if bit_arr[pat_len] {
-            return (i-pat_len+1) as i64; // found a match
+            return Some(i-pat_len+1); // found a match
         }
     }
-    return -1; // no match found
+    None // no match found
 }
 
 #[cfg(test)]
@@ -54,42 +54,42 @@ mod bitap_tests {
     fn receives_char_vectors() {
         let sequence: Vec<char> = "hello, world".chars().collect();
         let pattern: Vec<char> = "wor".chars().collect();
-        assert_eq!(bitap(&sequence, &pattern), 7);
+        assert_eq!(bitap(&sequence, &pattern), Some(7));
     }
 
     #[test]
     fn receives_integer_vectors() {
         let sequence = vec![3, 4, 5, 7, 3, 2, 1];
         let pattern = vec![4, 5, 7, 3];
-        assert_eq!(bitap(&sequence, &pattern), 1);
+        assert_eq!(bitap(&sequence, &pattern), Some(1));
     }
 
     #[test]
     fn receives_different_types_of_sequences() {
         let sequence: Vec<char> = "hello, world".chars().collect();
         let pattern = ['w', 'o', 'r'];
-        assert_eq!(bitap(&sequence, &pattern), 7);
+        assert_eq!(bitap(&sequence, &pattern), Some(7));
     }
 
     #[test]
     fn receives_empty_pattern_returns_index_0() {
         let sequence: Vec<char> = "hello, world".chars().collect();
         let pattern = vec![];
-        assert_eq!(bitap(&sequence, &pattern), 0);
+        assert_eq!(bitap(&sequence, &pattern), Some(0));
     }
 
     #[test]
     fn receives_longer_pattern_returns_invalid_index() {
         let sequence: Vec<char> = "hello, world".chars().collect();
         let pattern: Vec<char> = "hello, world! Here I am looking at nothing".chars().collect();
-        assert_eq!(bitap(&sequence, &pattern), -1);
+        assert_eq!(bitap(&sequence, &pattern), None);
     }
 
     #[test]
     fn receives_non_matching_pattern_returns_invalid_index() {
         let sequence = vec![3, 4, 5, 7, 3, 2, 1];
         let pattern = vec![4, 5, 7, 5];
-        assert_eq!(bitap(&sequence, &pattern), -1);
+        assert_eq!(bitap(&sequence, &pattern), None);
     }
 }
 
