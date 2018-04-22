@@ -202,15 +202,25 @@ mod ternary_tests {
 }
 
 #[macro_export]
+macro_rules! binary {
+    ($sequence:expr, $val:expr) => {
+        binary(&$sequence, &$val).index
+    };
+}
+
+#[macro_export]
+macro_rules! binary_rank {
+    ($sequence:expr, $val:expr) => {
+        binary(&$sequence, &$val).rank
+    };
+}
+
+#[macro_export]
 macro_rules! binary_predecessor {
     ($sequence:expr, $val:expr) => {
         {
-            let predecessor_rank = binary(&$sequence, &$val, true).unwrap() as isize - 1;
-            if predecessor_rank >= 0 {
-                Some(predecessor_rank)
-            } else {
-                None
-            }
+            let predecessor_idx = binary(&$sequence, &$val).rank as isize - 1;
+            if predecessor_idx >= 0 { Some(predecessor_idx) } else { None }
         }
     };
 }
@@ -219,9 +229,15 @@ macro_rules! binary_predecessor {
 macro_rules! binary_successor {
     ($sequence:expr, $val:expr) => {
         {
-            if let Some(val_idx) = binary(&$sequence, &$val, false) {
-                let successor_rank = val_idx + 1;
-                if successor_rank < $sequence.len() { Some(successor_rank) } else { None }
+            if $sequence.len() == 0 {
+                return None;
+            }
+            let result = binary(&$sequence, &$val);
+            if result.index == None && result.rank == 0 { // target is out of range and smaller
+                Some(0)
+            } else if let Some(target_idx) = result.index {
+                let successor_idx = target_idx + 1;
+                if successor_idx < $sequence.len() { Some(successor_idx) } else { None }
             } else {
                 None
             }
@@ -233,15 +249,38 @@ macro_rules! binary_successor {
 macro_rules! binary_nearest_neighbor {
     ($sequence:expr, $val:expr) => {
         {
-            let target_rank = binary(&$sequence, &$val, true).unwrap() as isize;
-            let (predecessor_rank, mut predecessor_diff) = (target_rank-1, 0);
-            let (successor_rank, mut successor_diff) = (target_rank+1, 0);
-            None
+            if $sequence.len() == 0 {
+                return None;
+            }
+            let result = binary(&$sequence, &$val);
+            // If target is out of range and smaller, return first index.
+            // If target is the first item, return second index.
+            if result.rank == 0 {
+                return if result.index == None { Some(0) } else { Some(1) };
+            }
+
+            let predecessor_idx = result.rank as isize - 1;
+            let successor_idx = result.rank + 1;
+            // If target is in range, then compare diffs and return that with a larger diff.
+            if predecessor_idx >= 0 && successor_idx < $sequence.len() {
+                let predecessor_idx = predecessor_idx as usize; // required for indexing
+                let predecessor_diff = $sequence[result.rank] - $sequence[predecessor_idx];
+                let successor_diff = $sequence[successor_idx] - $sequence[result.rank];
+                if predecessor_diff >= successor_diff {
+                    return Some(predecessor_idx);
+                } else {
+                    return Some(successor_idx);
+                }
+            } else {
+                // If target is the last item, return second-to-last index.
+                // If target is out of range and larger, return last index.
+                return Some(predecessor_idx);
+            }
         }
     }
 }
 
-pub fn binary<T: PartialOrd + PartialEq>(sequence: &[T], val: &T, rank: bool) -> Option<usize> {
+pub fn binary<T: PartialOrd + PartialEq>(sequence: &[T], val: &T) -> BinarySearchResult {
     let (mut left, mut right) = (0, sequence.len() as isize - 1);
 
     while left <= right {
@@ -251,10 +290,26 @@ pub fn binary<T: PartialOrd + PartialEq>(sequence: &[T], val: &T, rank: bool) ->
         } else if sequence[m] > *val {
             right = m as isize - 1;
         } else {
-            return Some(m);
+            return BinarySearchResult::new(Some(m), m);
         }
     }
-    if rank { Some(left as usize) } else { None }
+    BinarySearchResult::new(None, left as usize)
+}
+
+pub struct BinarySearchResult {
+    index: Option<usize>,
+    rank: usize
+}
+
+impl BinarySearchResult {
+    pub fn new(index: Option<usize>, rank: usize) -> BinarySearchResult {
+        if let Some(index) = index {
+            if rank > index {
+                panic!("rank should be less than or equal to index");
+            }
+        }
+        BinarySearchResult { index, rank }
+    }
 }
 
 #[cfg(test)]
@@ -264,49 +319,47 @@ mod binary_tests {
     #[test]
     fn receives_integer_sequence() {
         let sequence: Vec<u32> = (0..100).collect();
-        assert_eq!(binary(&sequence, &87, false), Some(87));
+        let result = binary(&sequence, &87);
+        assert_eq!(result.index.unwrap(), 87);
+        assert_eq!(result.rank, 87);
     }
 
     #[test]
     fn receives_char_sequence() {
         let sequence: Vec<char> = "abcdefghijklmnopqrstuvwxyz".chars().collect();
-        assert_eq!(binary(&sequence, &'g', false), Some(6));
+        let result = binary(&sequence, &'g');
+        assert_eq!(result.index.unwrap(), 6);
+        assert_eq!(result.rank, 6);
     }
 
     #[test]
     fn receives_empty_sequence() {
         let sequence = vec![];
-        assert_eq!(binary(&sequence, &1, false), None);
+        let result = binary(&sequence, &1);
+        assert_eq!(result.index, None);
+        assert_eq!(result.rank, 0);
     }
 
     #[test]
-    fn finds_non_existent_item() {
+    fn finds_non_existent_large_item() {
         let sequence: Vec<u32> = (0..100).collect();
-        assert_eq!(binary(&sequence, &100, false), None);
+        let result = binary(&sequence, &100);
+        assert_eq!(result.index, None);
+        assert_eq!(result.rank, 100);
     }
 
     #[test]
-    fn returns_rank() {
-        let sequence: Vec<u32> = (0..100).collect();
-        assert_eq!(binary(&sequence, &87, true), Some(87));
-    }
-
-    #[test]
-    fn returns_rank_for_non_existent_positive_item() {
-        let sequence: Vec<u32> = (0..100).collect();
-        assert_eq!(binary(&sequence, &500, true), Some(100));
-    }
-
-    #[test]
-    fn returns_rank_for_non_existent_negative_item() {
+    fn finds_non_existent_small_item() {
         let sequence: Vec<i32> = (0..100).collect();
-        assert_eq!(binary(&sequence, &-200, true), Some(0));
+        let result = binary(&sequence, &-200);
+        assert_eq!(result.index, None);
+        assert_eq!(result.rank, 0);
     }
 
     #[test]
     fn finds_predecessor() {
         let sequence: Vec<u32> = (0..100).collect();
-        assert_eq!(binary_predecessor!(sequence, 56), Some(55));
+        assert_eq!(binary_predecessor!(sequence, 56).unwrap(), 55);
     }
 
     #[test]
@@ -316,21 +369,27 @@ mod binary_tests {
     }
 
     #[test]
-    fn finds_predecessor_with_non_existent_positive_item() {
+    fn finds_predecessor_with_non_existent_out_of_range_larger_item() {
         let sequence: Vec<u32> = (0..100).collect();
-        assert_eq!(binary_predecessor!(sequence, 500), Some(99));
+        assert_eq!(binary_predecessor!(sequence, 500).unwrap(), 99);
     }
 
     #[test]
-    fn finds_predecessor_with_non_existent_negative_item() {
+    fn finds_predecessor_with_non_existent_out_of_range_smaller_item() {
         let sequence: Vec<i32> = (0..100).collect();
         assert_eq!(binary_predecessor!(sequence, -200), None);
     }
 
     #[test]
+    fn finds_predecessor_with_non_existent_in_range_item() {
+        let sequence = vec![1, 4, 5, 10, 30, 50, 80, 90];
+        assert_eq!(binary_predecessor!(sequence, 40).unwrap(), 4);
+    }
+
+    #[test]
     fn finds_successor() {
         let sequence: Vec<u32> = (0..100).collect();
-        assert_eq!(binary_successor!(sequence, 56), Some(57));
+        assert_eq!(binary_successor!(sequence, 56).unwrap(), 57);
     }
 
     #[test]
@@ -340,32 +399,56 @@ mod binary_tests {
     }
 
     #[test]
-    fn finds_successor_with_non_existent_positive_item() {
+    fn finds_successor_with_non_existent_out_of_range_larger_item() {
         let sequence: Vec<u32> = (0..100).collect();
         assert_eq!(binary_successor!(sequence, 500), None);
     }
 
     #[test]
-    fn finds_successor_with_non_existent_negative_item() {
+    fn finds_successor_with_non_existent_out_of_range_smaller_item() {
         let sequence: Vec<i32> = (0..100).collect();
-        assert_eq!(binary_successor!(sequence, -100), None);
+        assert_eq!(binary_successor!(sequence, -100).unwrap(), 0);
+    }
+
+    #[test]
+    fn finds_successor_with_non_existent_in_range_item() {
+        let sequence = vec![1, 4, 5, 10, 30, 50, 80, 90];
+        assert_eq!(binary_successor!(sequence, 40).unwrap(), 5);
     }
 
     #[test]
     fn finds_nearest_neighbor_returns_successor() {
         let sequence = vec![10, 20, 50, 60, 70, 75, 100];
-        assert_eq!(binary_nearest_neighbor!(sequence, 50), Some(3));
+        assert_eq!(binary_nearest_neighbor!(sequence, 50).unwrap(), 3);
     }
 
     #[test]
     fn finds_nearest_neighbor_returns_predecessor() {
         let sequence = vec![10, 20, 50, 60, 70, 75, 100];
-        assert_eq!(binary_nearest_neighbor!(sequence, 75), Some(4));
+        assert_eq!(binary_nearest_neighbor!(sequence, 75).unwrap(), 4);
     }
 
     #[test]
     fn finds_nearest_neighbor_with_equal_distance() {
         let sequence: Vec<u32> = (0..100).collect();
-        assert_eq!(binary_successor!(sequence, 56), Some(55));
+        assert_eq!(binary_nearest_neighbor!(sequence, 56).unwrap(), 55);
+    }
+
+    #[test]
+    fn finds_nearest_neighbor_with_non_existent_in_range_item() {
+        let sequence = vec![10, 20, 50, 60, 70, 75, 100];
+        assert_eq!(binary_nearest_neighbor!(sequence, 76).unwrap(), 5);
+    }
+
+    #[test]
+    fn finds_nearest_neighbor_with_non_existent_out_of_range_smaller_item() {
+        let sequence = vec![10, 20, 50, 60, 70, 75, 100];
+        assert_eq!(binary_nearest_neighbor!(sequence, 5).unwrap(), 0);
+    }
+
+    #[test]
+    fn finds_nearest_neighbor_with_non_existent_out_of_range_larger_item() {
+        let sequence = vec![10, 20, 50, 60, 70, 75, 100];
+        assert_eq!(binary_nearest_neighbor!(sequence, 106).unwrap(), 6);
     }
 }
