@@ -18,7 +18,7 @@ use std::cmp;
 ///
 /// let sequence: Vec<char> = "hello, world".chars().collect();
 /// let pattern: Vec<char> = "wor".chars().collect();
-/// assert_eq!(match_::bitap(&sequence, &pattern), 7);
+/// assert_eq!(match_::bitap(&sequence, &pattern).unwrap(), 7);
 /// ```
 ///
 /// If the pattern does not match, it returns -1.
