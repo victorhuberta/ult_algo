@@ -8,12 +8,10 @@ use std::ops;
 #[macro_export]
 macro_rules! include_sequence_search {
     () => {
-        use ult_algo::sequence::search::{SearchTarget, ternary};
+        use ult_algo::sequence::search::{SearchTarget, ternary, binary};
     };
 }
 
-/// # [Ternary Maximum](https://en.wikipedia.org/wiki/ternary)
-///
 /// Finds the maximum of a
 ///  [unimodal](https://en.wikipedia.org/wiki/Unimodality#Unimodal_function) function.
 ///
@@ -31,9 +29,7 @@ macro_rules! include_sequence_search {
 /// }
 /// ```
 ///
-/// # Panics
-///
-/// Case 1: Absolute precision is smaller than 1e-14
+/// # Panics (propagate = ult_algo::sequence::search::ternary)
 #[macro_export]
 macro_rules! ternary_max {
     ($f:expr, $left:expr, $right:expr, $absolute_precision:expr) => {
@@ -41,8 +37,6 @@ macro_rules! ternary_max {
     };
 }
 
-/// # [Ternary Minimum](https://en.wikipedia.org/wiki/ternary)
-///
 /// Finds the minimum of a
 ///  [unimodal](https://en.wikipedia.org/wiki/Unimodality#Unimodal_function) function.
 ///
@@ -60,9 +54,7 @@ macro_rules! ternary_max {
 /// }
 /// ```
 ///
-/// # Panics
-///
-/// Case 1: Absolute precision is smaller than 1e-14
+/// # Panics (propagate = ult_algo::sequence::search::ternary)
 #[macro_export]
 macro_rules! ternary_min {
     ($f:expr, $left:expr, $right:expr, $absolute_precision:expr) => {
@@ -70,7 +62,7 @@ macro_rules! ternary_min {
     };
 }
 
-/// # [Ternary](https://en.wikipedia.org/wiki/ternary)
+/// # [Ternary Search](https://en.wikipedia.org/wiki/ternary)
 ///
 /// Finds the minimum or maximum of a
 ///  [unimodal](https://en.wikipedia.org/wiki/Unimodality#Unimodal_function) function.
@@ -121,7 +113,7 @@ pub fn ternary<F>(
     (right+left)/2f64 // found local maximum
 }
 
-/// Enumerates the kinds of a search target.
+/// Kinds of a search target
 pub enum SearchTarget {
     Minimum,
     Maximum
@@ -203,6 +195,21 @@ mod ternary_tests {
     }
 }
 
+/// Search for index/position of an item in a sequence.
+///
+/// # Examples
+///
+/// ```
+/// #[macro_use]
+/// extern crate ult_algo;
+///
+/// include_sequence_search!();
+///
+/// fn main() {
+///     let sequence: Vec<u32> = (0..100).collect();
+///     assert_eq!(binary!(sequence, 56).unwrap(), 56);
+/// }
+/// ```
 #[macro_export]
 macro_rules! binary {
     ($sequence:expr, $val:expr) => {
@@ -210,6 +217,21 @@ macro_rules! binary {
     };
 }
 
+/// Search for number of items smaller than or equal to an item in a sequence.
+///
+/// # Examples
+///
+/// ```
+/// #[macro_use]
+/// extern crate ult_algo;
+///
+/// include_sequence_search!();
+///
+/// fn main() {
+///     let sequence: Vec<u32> = (0..100).collect();
+///     assert_eq!(binary_rank!(sequence, 56), 56);
+/// }
+/// ```
 #[macro_export]
 macro_rules! binary_rank {
     ($sequence:expr, $val:expr) => {
@@ -217,6 +239,21 @@ macro_rules! binary_rank {
     };
 }
 
+/// Search for position of the predecessor of an item in a sequence.
+///
+/// # Examples
+///
+/// ```
+/// #[macro_use]
+/// extern crate ult_algo;
+///
+/// include_sequence_search!();
+///
+/// fn main() {
+///     let sequence: Vec<u32> = (0..100).collect();
+///     assert_eq!(binary_predecessor!(sequence, 56).unwrap(), 55);
+/// }
+/// ```
 #[macro_export]
 macro_rules! binary_predecessor {
     ($sequence:expr, $val:expr) => {
@@ -227,6 +264,21 @@ macro_rules! binary_predecessor {
     };
 }
 
+/// Search for position of the successor of an item in a sequence.
+///
+/// # Examples
+///
+/// ```
+/// #[macro_use]
+/// extern crate ult_algo;
+///
+/// include_sequence_search!();
+///
+/// fn main() {
+///     let sequence: Vec<u32> = (0..100).collect();
+///     assert_eq!(binary_successor!(sequence, 56).unwrap(), 57);
+/// }
+/// ```
 #[macro_export]
 macro_rules! binary_successor {
     ($sequence:expr, $val:expr) => {
@@ -246,6 +298,16 @@ macro_rules! binary_successor {
     };
 }
 
+/// Search for position of the nearest neighbor of an item in a sequence.
+///
+/// # Examples
+///
+/// ```
+/// use ult_algo::sequence::search;
+///
+/// let sequence = vec![10, 20, 50, 60, 70, 75, 100];
+/// assert_eq!(search::binary_nearest_neighbor(&sequence, &50).unwrap(), 3);
+/// ```
 pub fn binary_nearest_neighbor<T>(sequence: &[T], val: &T) -> Option<usize>
     where T: Copy + PartialOrd + PartialEq + ops::Sub<Output = T>
 {
@@ -270,6 +332,20 @@ pub fn binary_nearest_neighbor<T>(sequence: &[T], val: &T) -> Option<usize>
         }
 }
 
+/// # [Binary Search](https://en.wikipedia.org/wiki/Binary_search_algorithm)
+///
+/// Search for position and rank of an item in a sequence with the binary search algorithm.
+///
+/// # Examples
+///
+/// ```
+/// use ult_algo::sequence::search;
+///
+/// let sequence: Vec<u32> = (0..100).collect();
+/// let result = search::binary(&sequence, &87);
+/// assert_eq!(result.index.unwrap(), 87);
+/// assert_eq!(result.rank, 87);
+/// ```
 pub fn binary<T: PartialOrd + PartialEq>(sequence: &[T], val: &T) -> BinarySearchResult {
     let (mut left, mut right) = (0, sequence.len() as isize - 1);
 
@@ -286,12 +362,20 @@ pub fn binary<T: PartialOrd + PartialEq>(sequence: &[T], val: &T) -> BinarySearc
     BinarySearchResult::new(None, left as usize)
 }
 
+/// Result from ult_algo::sequence::search::binary
 pub struct BinarySearchResult {
-    index: Option<usize>,
-    rank: usize
+    /// Position of the item
+    pub index: Option<usize>,
+    /// Number of items smaller than or equal to the item
+    pub rank: usize
 }
 
 impl BinarySearchResult {
+    /// Creates a new BinarySearchResult.
+    ///
+    /// # Panics
+    ///
+    /// Case 1: Rank is larger than index
     pub fn new(index: Option<usize>, rank: usize) -> BinarySearchResult {
         if let Some(index) = index {
             if rank > index {
@@ -305,6 +389,12 @@ impl BinarySearchResult {
 #[cfg(test)]
 mod binary_tests {
     use super::*;
+
+    #[test]
+    #[should_panic(expected = "rank should be less than or equal to index")]
+    fn creates_invalid_binary_search_result() {
+        BinarySearchResult::new(Some(10), 11);
+    }
 
     #[test]
     fn receives_integer_sequence() {
