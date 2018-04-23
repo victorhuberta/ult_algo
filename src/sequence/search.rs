@@ -2,6 +2,8 @@
 //!
 //! A collection of functions to search for a value from a sequence/function.
 
+use std::ops;
+
 /// Brings all sequence search types and functions required by macros into scope.
 #[macro_export]
 macro_rules! include_sequence_search {
@@ -230,54 +232,42 @@ macro_rules! binary_successor {
     ($sequence:expr, $val:expr) => {
         {
             if $sequence.len() == 0 {
-                return None;
-            }
-            let result = binary(&$sequence, &$val);
-            if result.index == None && result.rank == 0 { // target is out of range and smaller
-                Some(0)
-            } else if let Some(target_idx) = result.index {
-                let successor_idx = target_idx + 1;
-                if successor_idx < $sequence.len() { Some(successor_idx) } else { None }
-            } else {
                 None
+            } else {
+                let result = binary(&$sequence, &$val);
+                if result.index == None && result.rank == 0 { // target is out of range and smaller
+                    Some(0)
+                } else {
+                    let successor_idx = if result.index == None { result.rank } else { result.rank+1 };
+                    if successor_idx < $sequence.len() { Some(successor_idx) } else { None }
+                }
             }
         }
     };
 }
 
-#[macro_export]
-macro_rules! binary_nearest_neighbor {
-    ($sequence:expr, $val:expr) => {
-        {
-            if $sequence.len() == 0 {
-                return None;
-            }
-            let result = binary(&$sequence, &$val);
-            // If target is out of range and smaller, return first index.
-            // If target is the first item, return second index.
-            if result.rank == 0 {
-                return if result.index == None { Some(0) } else { Some(1) };
-            }
-
-            let predecessor_idx = result.rank as isize - 1;
-            let successor_idx = result.rank + 1;
-            // If target is in range, then compare diffs and return that with a larger diff.
-            if predecessor_idx >= 0 && successor_idx < $sequence.len() {
-                let predecessor_idx = predecessor_idx as usize; // required for indexing
-                let predecessor_diff = $sequence[result.rank] - $sequence[predecessor_idx];
-                let successor_diff = $sequence[successor_idx] - $sequence[result.rank];
-                if predecessor_diff >= successor_diff {
-                    return Some(predecessor_idx);
-                } else {
-                    return Some(successor_idx);
-                }
-            } else {
-                // If target is the last item, return second-to-last index.
-                // If target is out of range and larger, return last index.
-                return Some(predecessor_idx);
-            }
+pub fn binary_nearest_neighbor<T>(sequence: &[T], val: &T) -> Option<usize>
+    where T: Copy + PartialOrd + PartialEq + ops::Sub<Output = T>
+{
+        if sequence.len() == 0 {
+            return None;
         }
-    }
+        let result = binary(&sequence, &val);
+        // If target is the first item or is smaller than that, return successor.
+        if result.rank == 0 {
+            return if result.index == None { Some(0) } else { Some(1) };
+        }
+
+        let predecessor_idx = result.rank - 1; // result should NOT overflow
+        let successor_idx = result.rank + 1;
+        // If successor is in range, then compare diffs and return that with a larger diff.
+        if successor_idx < sequence.len() {
+            let p_diff = sequence[result.rank] - sequence[predecessor_idx];
+            let s_diff = sequence[successor_idx] - sequence[result.rank];
+            if p_diff <= s_diff { Some(predecessor_idx) } else { Some(successor_idx) }
+        } else {
+            Some(predecessor_idx) // either target is the last item or is larger than that
+        }
 }
 
 pub fn binary<T: PartialOrd + PartialEq>(sequence: &[T], val: &T) -> BinarySearchResult {
@@ -419,36 +409,36 @@ mod binary_tests {
     #[test]
     fn finds_nearest_neighbor_returns_successor() {
         let sequence = vec![10, 20, 50, 60, 70, 75, 100];
-        assert_eq!(binary_nearest_neighbor!(sequence, 50).unwrap(), 3);
+        assert_eq!(binary_nearest_neighbor(&sequence, &50).unwrap(), 3);
     }
 
     #[test]
     fn finds_nearest_neighbor_returns_predecessor() {
         let sequence = vec![10, 20, 50, 60, 70, 75, 100];
-        assert_eq!(binary_nearest_neighbor!(sequence, 75).unwrap(), 4);
+        assert_eq!(binary_nearest_neighbor(&sequence, &75).unwrap(), 4);
     }
 
     #[test]
     fn finds_nearest_neighbor_with_equal_distance() {
         let sequence: Vec<u32> = (0..100).collect();
-        assert_eq!(binary_nearest_neighbor!(sequence, 56).unwrap(), 55);
+        assert_eq!(binary_nearest_neighbor(&sequence, &56).unwrap(), 55);
     }
 
     #[test]
     fn finds_nearest_neighbor_with_non_existent_in_range_item() {
         let sequence = vec![10, 20, 50, 60, 70, 75, 100];
-        assert_eq!(binary_nearest_neighbor!(sequence, 76).unwrap(), 5);
+        assert_eq!(binary_nearest_neighbor(&sequence, &76).unwrap(), 5);
     }
 
     #[test]
     fn finds_nearest_neighbor_with_non_existent_out_of_range_smaller_item() {
         let sequence = vec![10, 20, 50, 60, 70, 75, 100];
-        assert_eq!(binary_nearest_neighbor!(sequence, 5).unwrap(), 0);
+        assert_eq!(binary_nearest_neighbor(&sequence, &5).unwrap(), 0);
     }
 
     #[test]
     fn finds_nearest_neighbor_with_non_existent_out_of_range_larger_item() {
         let sequence = vec![10, 20, 50, 60, 70, 75, 100];
-        assert_eq!(binary_nearest_neighbor!(sequence, 106).unwrap(), 6);
+        assert_eq!(binary_nearest_neighbor(&sequence, &106).unwrap(), 6);
     }
 }
