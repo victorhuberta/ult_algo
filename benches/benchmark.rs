@@ -40,6 +40,11 @@ fn sequence_benchmark(c: &mut Criterion) {
     c.bench_function("sequence::search::ternary_max!(|x| x.powf(x), 50.0, 1000.0, 0.0001)", |b| {
         b.iter(|| ternary_max!(|x| x.powf(x), 50.0, 1000.0, 0.0001))
     });
+
+    let sequence: Vec<i32> = (-100..100).collect();
+    c.bench_function("sequence::search::binary(&sequence, &868)", move |b| {
+        b.iter(|| sequence::search::binary(&sequence, &868))
+    });
 }
 
 criterion_group!(benches, sequence_benchmark);
