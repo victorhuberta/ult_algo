@@ -195,6 +195,23 @@ mod ternary_tests {
     }
 }
 
+/// https://en.wikipedia.org/wiki/Exponential_search
+pub fn exponential<T: PartialOrd>(sequence: &[T], val: &T) -> BinarySearchResult {
+    let size = sequence.len();
+    if size == 0 {
+        return BinarySearchResult::new(None, 0);
+    }
+
+    // Find the upper and lower bounds for the search space.
+    let mut bound = 1;
+    while bound < size && sequence[bound] < *val {
+        bound *= 2;
+    }
+
+    // Make a slice and perform a binary search on it.
+    binary(&sequence[bound/2 .. (bound+1).min(size)], val)
+}
+
 /// Search for index/position of an item in a sequence.
 ///
 /// # Examples
@@ -531,4 +548,28 @@ mod binary_tests {
         let sequence = vec![10, 20, 50, 60, 70, 75, 100];
         assert_eq!(binary_nearest_neighbor(&sequence, &106).unwrap(), 6);
     }
+}
+
+/// https://en.wikipedia.org/wiki/Interpolation_search
+pub fn interpolation(sequence: &[f64], val: f64) -> Option<usize> {
+    let (mut low, mut high) = (0, sequence.len()-1);
+    // Only when there are more than 1 item left and val is in the range.
+    while sequence[high] != sequence[low] &&
+        (val >= sequence[low] && val <= sequence[high])
+    {
+        // Interpolate position of sought item.
+        let mid = low + ((val-sequence[low]) * (high-low) as f64
+            / sequence[high]-sequence[low]) as usize;
+
+        // Narrow the search space.
+        if sequence[mid] < val {
+            low = mid + 1;
+        } else if sequence[mid] > val {
+            high = mid - 1;
+        } else {
+            return Some(mid); // gotcha!
+        }
+    }
+    // Either it's the last item or there is none.
+    if sequence[low] == val { Some(low) } else { None }
 }
