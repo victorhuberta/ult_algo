@@ -197,9 +197,9 @@ mod ternary_tests {
     }
 }
 
-/// #[Exponential Search](https://en.wikipedia.org/wiki/Exponential_search)
+/// # [Exponential Search](https://en.wikipedia.org/wiki/Exponential_search)
 ///
-/// Search for index/position of an item in a sequence with the exponential search algorithm.
+/// Search for index/position of an item in a sorted sequence with the exponential search algorithm.
 ///
 /// # Examples
 ///
@@ -265,7 +265,7 @@ mod exponential_tests {
     }
 }
 
-/// Search for index/position of an item in a sequence.
+/// Search for index/position of an item in a sorted sequence.
 ///
 /// # Examples
 ///
@@ -287,7 +287,7 @@ macro_rules! binary {
     };
 }
 
-/// Search for number of items smaller than or equal to an item in a sequence.
+/// Search for number of items smaller than or equal to an item in a sorted sequence.
 ///
 /// # Examples
 ///
@@ -309,7 +309,7 @@ macro_rules! binary_rank {
     };
 }
 
-/// Search for position of the predecessor of an item in a sequence.
+/// Search for position of the predecessor of an item in a sorted sequence.
 ///
 /// # Examples
 ///
@@ -334,7 +334,7 @@ macro_rules! binary_predecessor {
     };
 }
 
-/// Search for position of the successor of an item in a sequence.
+/// Search for position of the successor of an item in a sorted sequence.
 ///
 /// # Examples
 ///
@@ -368,7 +368,7 @@ macro_rules! binary_successor {
     };
 }
 
-/// Search for position of the nearest neighbor of an item in a sequence.
+/// Search for position of the nearest neighbor of an item in a sorted sequence.
 ///
 /// # Examples
 ///
@@ -404,7 +404,7 @@ pub fn binary_nearest_neighbor<T>(sequence: &[T], val: &T) -> Option<usize>
 
 /// # [Binary Search](https://en.wikipedia.org/wiki/Binary_search_algorithm)
 ///
-/// Search for position and rank of an item in a sequence with the binary search algorithm.
+/// Search for position and rank of an item in a sorted sequence with the binary search algorithm.
 ///
 /// # Examples
 ///
@@ -603,9 +603,9 @@ mod binary_tests {
     }
 }
 
-/// #[Interpolation Search](https://en.wikipedia.org/wiki/Interpolation_search)
+/// # [Interpolation Search](https://en.wikipedia.org/wiki/Interpolation_search)
 ///
-/// Search for index/position of an item in a sequence with the interpolation search algorithm.
+/// Search for index/position of an item in a sorted sequence with the interpolation search algorithm.
 ///
 /// # Examples
 ///
