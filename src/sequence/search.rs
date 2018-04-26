@@ -3,11 +3,13 @@
 //! A collection of functions to search for a value from a sequence/function.
 
 use std::ops;
+use num_traits::{FromPrimitive, ToPrimitive};
 
 /// Brings all sequence search types and functions required by macros into scope.
 #[macro_export]
 macro_rules! include_sequence_search {
     () => {
+        #[allow(unused_imports)]
         use ult_algo::sequence::search::{SearchTarget, ternary, binary};
     };
 }
@@ -195,11 +197,22 @@ mod ternary_tests {
     }
 }
 
-/// https://en.wikipedia.org/wiki/Exponential_search
-pub fn exponential<T: PartialOrd>(sequence: &[T], val: &T) -> BinarySearchResult {
+/// #[Exponential Search](https://en.wikipedia.org/wiki/Exponential_search)
+///
+/// Search for index/position of an item in a sequence with the exponential search algorithm.
+///
+/// # Examples
+///
+/// ```
+/// use ult_algo::sequence::search;
+///
+/// let sequence: Vec<u32> = (0..100).collect();
+/// assert_eq!(search::exponential(&sequence, &87).unwrap(), 87);
+/// ```
+pub fn exponential<T: PartialOrd>(sequence: &[T], val: &T) -> Option<usize> {
     let size = sequence.len();
     if size == 0 {
-        return BinarySearchResult::new(None, 0);
+        return None;
     }
 
     // Find the upper and lower bounds for the search space.
@@ -209,7 +222,47 @@ pub fn exponential<T: PartialOrd>(sequence: &[T], val: &T) -> BinarySearchResult
     }
 
     // Make a slice and perform a binary search on it.
-    binary(&sequence[bound/2 .. (bound+1).min(size)], val)
+    let (lower_bound, upper_bound) = (bound/2, (bound+1).min(size));
+    if let Some(i) = binary(&sequence[lower_bound .. upper_bound], val).index {
+        Some(lower_bound+i) // i is relative to the lower bound
+    } else {
+        None
+    }
+}
+
+#[cfg(test)]
+mod exponential_tests {
+    use super::exponential;
+
+    #[test]
+    fn receives_integer_sequence() {
+        let sequence: Vec<u32> = (0..100).collect();
+        assert_eq!(exponential(&sequence, &87).unwrap(), 87);
+    }
+
+    #[test]
+    fn receives_char_sequence() {
+        let sequence: Vec<char> = "abcdefghijklmnopqrstuvwxyz".chars().collect();
+        assert_eq!(exponential(&sequence, &'g').unwrap(), 6);
+    }
+
+    #[test]
+    fn receives_empty_sequence() {
+        let sequence = vec![];
+        assert_eq!(exponential(&sequence, &1), None);
+    }
+
+    #[test]
+    fn finds_non_existent_large_item() {
+        let sequence: Vec<u32> = (0..100).collect();
+        assert_eq!(exponential(&sequence, &100), None);
+    }
+
+    #[test]
+    fn finds_non_existent_small_item() {
+        let sequence: Vec<i32> = (0..100).collect();
+        assert_eq!(exponential(&sequence, &-200), None);
+    }
 }
 
 /// Search for index/position of an item in a sequence.
@@ -331,7 +384,7 @@ pub fn binary_nearest_neighbor<T>(sequence: &[T], val: &T) -> Option<usize>
         if sequence.len() == 0 {
             return None;
         }
-        let result = binary(&sequence, &val);
+        let result = binary(sequence, val);
         // If target is the first item or is smaller than that, return successor.
         if result.rank == 0 {
             return if result.index == None { Some(0) } else { Some(1) };
@@ -550,26 +603,83 @@ mod binary_tests {
     }
 }
 
-/// https://en.wikipedia.org/wiki/Interpolation_search
-pub fn interpolation(sequence: &[f64], val: f64) -> Option<usize> {
+/// #[Interpolation Search](https://en.wikipedia.org/wiki/Interpolation_search)
+///
+/// Search for index/position of an item in a sequence with the interpolation search algorithm.
+///
+/// # Examples
+///
+/// ```
+/// use ult_algo::sequence::search;
+///
+/// let sequence: Vec<u32> = (0..100).collect();
+/// assert_eq!(search::interpolation(&sequence, &87).unwrap(), 87);
+/// ```
+///
+/// # Panics
+///
+/// Case 1: Generic type failed to be casted from and to usize
+pub fn interpolation<T>(sequence: &[T], val: &T) -> Option<usize>
+    where T: Copy + PartialOrd + PartialEq + FromPrimitive + ToPrimitive +
+        ops::Sub<Output = T> + ops::Mul<Output = T> + ops::Div<Output = T>
+{
+    if sequence.len() == 0 {
+        return None;
+    }
     let (mut low, mut high) = (0, sequence.len()-1);
     // Only when there are more than 1 item left and val is in the range.
     while sequence[high] != sequence[low] &&
-        (val >= sequence[low] && val <= sequence[high])
+        (*val >= sequence[low] && *val <= sequence[high])
     {
         // Interpolate position of sought item.
-        let mid = low + ((val-sequence[low]) * (high-low) as f64
-            / sequence[high]-sequence[low]) as usize;
+        let k = T::from_usize(high-low).unwrap();
+        let offset = (*val-sequence[low]) * k / (sequence[high]-sequence[low]);
+        let mid = low + T::to_usize(&offset).unwrap();
 
         // Narrow the search space.
-        if sequence[mid] < val {
+        if sequence[mid] < *val {
             low = mid + 1;
-        } else if sequence[mid] > val {
+        } else if sequence[mid] > *val {
             high = mid - 1;
         } else {
             return Some(mid); // gotcha!
         }
     }
     // Either it's the last item or there is none.
-    if sequence[low] == val { Some(low) } else { None }
+    if sequence[low] == *val { Some(low) } else { None }
+}
+
+#[cfg(test)]
+mod interpolation_tests {
+    use super::interpolation;
+
+    #[test]
+    fn receives_integer_sequence() {
+        let sequence: Vec<u32> = (0..100).collect();
+        assert_eq!(interpolation(&sequence, &87).unwrap(), 87);
+    }
+
+    #[test]
+    fn receives_float_sequence() {
+        let sequence: Vec<f64> = vec![-100f64, -60f64, -34f64, 50f64, 100f64];
+        assert_eq!(interpolation(&sequence, &-34f64).unwrap(), 2);
+    }
+
+    #[test]
+    fn receives_empty_sequence() {
+        let sequence = vec![];
+        assert_eq!(interpolation(&sequence, &1), None);
+    }
+
+    #[test]
+    fn finds_non_existent_large_item() {
+        let sequence: Vec<u32> = (0..100).collect();
+        assert_eq!(interpolation(&sequence, &100), None);
+    }
+
+    #[test]
+    fn finds_non_existent_small_item() {
+        let sequence: Vec<i32> = (0..100).collect();
+        assert_eq!(interpolation(&sequence, &-200), None);
+    }
 }

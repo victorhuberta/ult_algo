@@ -45,6 +45,16 @@ fn sequence_benchmark(c: &mut Criterion) {
     c.bench_function("sequence::search::binary(&sequence, &868)", move |b| {
         b.iter(|| sequence::search::binary(&sequence, &868))
     });
+
+    let sequence: Vec<i32> = (-100..100).collect();
+    c.bench_function("sequence::search::exponential(&sequence, &868)", move |b| {
+        b.iter(|| sequence::search::exponential(&sequence, &868))
+    });
+
+    let sequence: Vec<i32> = (-100..100).collect();
+    c.bench_function("sequence::search::interpolation(&sequence, &99)", move |b| {
+        b.iter(|| sequence::search::interpolation(&sequence, &99))
+    });
 }
 
 criterion_group!(benches, sequence_benchmark);

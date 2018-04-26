@@ -5,6 +5,7 @@ authors = ["Victor Huberta <victorhuberta@gmail.com>"]
 
 [dependencies]
 bit-vec = "0.4.4"
+num-traits = "0.2"
 rand = "0.4"
 
 [dev-dependencies]
