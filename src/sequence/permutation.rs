@@ -19,13 +19,62 @@
 ///     [1, 4, 2, 3], [4, 1, 2, 3],
 /// ];
 ///
+/// let mut sequence = vec![1, 2, 3, 4];
 /// let mut i = 0;
-/// for permutation in heap(&[1, 2, 3, 4]) {
+/// for permutation in HeapGen::new(&mut sequence) {
 ///     assert_eq!(permutation, ten_permutations[i]);
 /// }
 /// ```
-pub fn heap<T>(sequence: &[T]) -> [T] {
-    []
+#[derive(Debug)]
+pub struct HeapGen<'a, T: 'a> {
+    last_permutation: &'a mut Vec<T>,
+    interchanges: Vec<usize>,
+    i: usize
+}
+
+impl<'a, T> HeapGen<'a, T> {
+    pub fn new(sequence: &'a mut Vec<T>) -> HeapGen<'a, T> {
+        HeapGen {
+            last_permutation: sequence,
+            interchanges: vec![0; sequence.len()],
+            i: 0
+        }
+    }
+}
+
+impl<'a, T> Iterator for HeapGen<'a, T> {
+    type Item = &'a mut Vec<T>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.i < self.last_permutation.len() {
+            let counter = self.interchanges[self.i];
+            if counter < self.i {
+                // Figure out which element to swap into the last position.
+                let item_idx = if self.i % 2 == 0 {
+                    0
+                } else {
+                    counter
+                };
+
+                // Swap two elements.
+                let tmp = self.last_permutation[item_idx];
+                self.last_permutation[item_idx] = self.last_permutation[self.i];
+                self.last_permutation[self.i] = tmp;
+
+                // Prepare for the next permutation.
+                self.interchanges[self.i] += 1;
+                self.i = 0;
+                Some(self.last_permutation)
+            } else {
+                // We are not done. Let's call next() again.
+                self.interchanges[self.i] = 0;
+                self.i += 1;
+                self.next()
+            }
+        } else {
+            None
+        }
+    }
 }
 
 #[cfg(test)]
@@ -42,8 +91,9 @@ mod heap_tests {
             [1, 4, 2, 3], [4, 1, 2, 3],
         ];
 
+        let mut sequence = vec![1, 2, 3, 4];
         let mut i = 0;
-        for permutation in heap(&[1, 2, 3, 4]) {
+        for permutation in HeapGen::new(&mut sequence) {
             assert_eq!(permutation, ten_permutations[i]);
         }
     }
@@ -58,8 +108,9 @@ mod heap_tests {
             [3, 2, 4, 1], [2, 3, 4, 1],
         ];
 
+        let mut sequence = vec![1, 2, 3, 4];
         let mut i = 0;
-        for permutation in heap(&[1, 2, 3, 4]) {
+        for permutation in HeapGen::new(&mut sequence) {
             assert_eq!(permutation, ten_permutations[i]);
         }
     }
