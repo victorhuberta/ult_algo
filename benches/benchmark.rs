@@ -55,6 +55,12 @@ fn sequence_benchmark(c: &mut Criterion) {
     c.bench_function("sequence::search::interpolation(&sequence, &99)", move |b| {
         b.iter(|| sequence::search::interpolation(&sequence, &99))
     });
+
+    c.bench_function("sequence::permutation::HeapGen::new(sequence)", |b| {
+        let sequence: Vec<i32> = (-100..100).collect();
+        let mut gen = sequence::permutation::HeapGen::new(sequence);
+        b.iter(|| gen.next())
+    });
 }
 
 criterion_group!(benches, sequence_benchmark);

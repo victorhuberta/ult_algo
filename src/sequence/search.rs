@@ -81,7 +81,7 @@ macro_rules! ternary_min {
 ///
 /// # Panics
 ///
-/// Case 1: Absolute precision is smaller than 1e-14
+/// * Absolute precision is smaller than 1e-14
 pub fn ternary<F>(
     search_target: SearchTarget,
     f: F,
@@ -445,7 +445,7 @@ impl BinarySearchResult {
     ///
     /// # Panics
     ///
-    /// Case 1: Rank is larger than index
+    /// * Rank is larger than index
     pub fn new(index: Option<usize>, rank: usize) -> BinarySearchResult {
         if let Some(index) = index {
             if rank > index {
@@ -618,7 +618,7 @@ mod binary_tests {
 ///
 /// # Panics
 ///
-/// Case 1: Generic type failed to be casted from and to usize
+/// * Generic type failed to be casted from and to usize
 pub fn interpolation<T>(sequence: &[T], val: &T) -> Option<usize>
     where T: Copy + PartialOrd + PartialEq + FromPrimitive + ToPrimitive +
         ops::Sub<Output = T> + ops::Mul<Output = T> + ops::Div<Output = T>

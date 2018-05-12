@@ -24,7 +24,7 @@ use rand::Rng;
 ///
 /// # Panics
 ///
-/// Case 1: k is larger than or equal to the list's length
+/// * k is larger than or equal to the list's length
 pub fn quick_smallest<T: PartialOrd>(list: &mut [T], k: usize) -> &T {
     if k >= list.len() {
         panic!("k={} should be smaller than list's length", k);
