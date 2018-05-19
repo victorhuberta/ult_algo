@@ -160,3 +160,18 @@ mod heap_tests {
         assert_eq!(permutations.len(), 24);
     }
 }
+
+/// # [Steinhaus–Johnson–Trotter Algorithm](https://en.wikipedia.org/wiki/Steinhaus%E2%80%93Johnson%E2%80%93Trotter_algorithm)
+///
+/// Generates all the permutations of *n* elements.
+/// Each permutation differs from the previous permutation by swapping two adjacent elements.
+/// This algoritm is named after Hugo Steinhaus, Selmer M. Johnson, and Hale F. Trotter.
+/// Shimon Even provided an improvement to its running time, which is implemented here.
+///
+/// # Examples
+///
+/// ```
+/// ```
+pub struct SJTEven<T: Clone> {
+    last_permutation: Vec<T>
+}
