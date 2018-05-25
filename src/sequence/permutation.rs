@@ -45,10 +45,9 @@ pub struct HeapGen<T: Clone> {
 
 impl<T: Clone> HeapGen<T> {
     pub fn new(sequence: Vec<T>) -> HeapGen<T> {
-        let len = sequence.len();
         HeapGen {
+            swaps: vec![0; sequence.len()],
             last_permutation: sequence,
-            swaps: vec![0; len],
             n: 0,
             count: 0
         }
@@ -171,7 +170,113 @@ mod heap_tests {
 /// # Examples
 ///
 /// ```
+/// use ult_algo::sequence::permutation;
+///
+/// let ten_permutations = [
+///     [1, 2, 3, 4], [2, 1, 3, 4],
+///     [3, 1, 2, 4], [1, 3, 2, 4],
+///     [2, 3, 1, 4], [3, 2, 1, 4],
+///     [4, 2, 1, 3], [2, 4, 1, 3],
+///     [1, 4, 2, 3], [4, 1, 2, 3]
+/// ];
+///
+/// let sequence = vec![1, 2, 3, 4];
+/// let gen = permutation::SJTEven::new(sequence);
+/// for (i, permutation) in gen.take(10).enumerate() {
+///     assert_eq!(permutation, ten_permutations[i]);
+/// }
 /// ```
 pub struct SJTEven<T: Clone> {
-    last_permutation: Vec<T>
+    last_permutation: Vec<T>,
+    indices: Vec<usize>,
+    directions: Vec<i8>,
+    count: usize
+}
+
+impl<T: Clone> SJTEven<T> {
+    pub fn new(sequence: Vec<T>) -> SJTEven<T> {
+        SJTEven {
+            indices: sequence.iter().enumerate().map(|(i, _)| i).collect(),
+            directions: sequence.iter().enumerate()
+                .map(|(i, _)| if i == 0 { 0 } else { -1 }).collect(),
+            last_permutation: sequence,
+            count: 0
+        }
+    }
+}
+
+impl<T: Clone> Iterator for SJTEven<T> {
+    type Item = Vec<T>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.count += 1;
+        if self.count == 1 {
+            return Some(self.last_permutation.to_vec());
+        }
+        None
+    }
+}
+
+#[cfg(test)]
+mod sjt_tests {
+    use super::SJTEven;
+
+    #[test]
+    fn generate_correct_number_of_permutations() {
+        let sequence = vec![1, 2, 3, 4];
+        assert_eq!(SJTEven::new(sequence).count(), 24);
+    }
+
+    #[test]
+    fn generate_the_first_ten_permutations() {
+        let ten_permutations = [
+            [1, 2, 3, 4], [2, 1, 3, 4],
+            [3, 1, 2, 4], [1, 3, 2, 4],
+            [2, 3, 1, 4], [3, 2, 1, 4],
+            [4, 2, 1, 3], [2, 4, 1, 3],
+            [1, 4, 2, 3], [4, 1, 2, 3]
+        ];
+
+        let sequence = vec![1, 2, 3, 4];
+        for (i, permutation) in SJTEven::new(sequence).take(10).enumerate() {
+            assert_eq!(permutation, ten_permutations[i]);
+        }
+    }
+
+    #[test]
+    fn generate_the_last_ten_permutations() {
+        let ten_permutations = [
+            [4, 1, 3, 2], [1, 4, 3, 2],
+            [3, 4, 1, 2], [4, 3, 1, 2],
+            [4, 3, 2, 1], [3, 4, 2, 1],
+            [2, 4, 3, 1], [4, 2, 3, 1],
+            [3, 2, 4, 1], [2, 3, 4, 1]
+        ];
+
+        let sequence = vec![1, 2, 3, 4];
+        for (i, permutation) in SJTEven::new(sequence).skip(14).enumerate() {
+            assert_eq!(permutation, ten_permutations[i]);
+        }
+    }
+
+    #[test]
+    fn generate_unique_permutations() {
+        let sequence = vec![1, 2, 3, 4];
+        let mut permutations: Vec<Vec<usize>> = SJTEven::new(sequence).collect();
+        permutations.sort_unstable();
+        permutations.dedup();
+        assert_eq!(permutations.len(), 24);
+    }
+
+    #[test]
+    fn regenerate_permutations() {
+        let sequence = vec![1, 2, 3, 4];
+        let mut gen = SJTEven::new(sequence).skip(24);
+        assert_eq!(gen.next(), None);
+
+        let mut permutations: Vec<Vec<usize>> = gen.collect();
+        permutations.sort_unstable();
+        permutations.dedup();
+        assert_eq!(permutations.len(), 24);
+    }
 }
