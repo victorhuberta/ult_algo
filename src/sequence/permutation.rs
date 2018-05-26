@@ -28,10 +28,9 @@
 ///
 /// # Gotchas
 ///
-/// * Order of generated permutations is not preserved
+/// * Order of generated permutations is not preserved across regenerations
 /// * It consumes the vector; we can optionally clone the vector first
 /// * It clones its internal representation for every iteration
-#[derive(Debug)]
 pub struct HeapGen<T: Clone> {
     /// Last generated permutation
     last_permutation: Vec<T>,
@@ -39,7 +38,7 @@ pub struct HeapGen<T: Clone> {
     swaps: Vec<usize>,
     /// Last position of a permutation (to be swapped with elements indexed by self.swaps)
     n: usize,
-    /// Count the number of iterations
+    /// Number of iterations
     count: usize
 }
 
@@ -173,11 +172,11 @@ mod heap_tests {
 /// use ult_algo::sequence::permutation;
 ///
 /// let ten_permutations = [
-///     [1, 2, 3, 4], [2, 1, 3, 4],
-///     [3, 1, 2, 4], [1, 3, 2, 4],
-///     [2, 3, 1, 4], [3, 2, 1, 4],
-///     [4, 2, 1, 3], [2, 4, 1, 3],
-///     [1, 4, 2, 3], [4, 1, 2, 3]
+///     [1, 2, 3, 4], [1, 2, 4, 3],
+///     [1, 4, 2, 3], [4, 1, 2, 3],
+///     [4, 1, 3, 2], [1, 4, 3, 2],
+///     [1, 3, 4, 2], [1, 3, 2, 4],
+///     [3, 1, 2, 4], [3, 1, 4, 2]
 /// ];
 ///
 /// let sequence = vec![1, 2, 3, 4];
@@ -186,17 +185,25 @@ mod heap_tests {
 ///     assert_eq!(permutation, ten_permutations[i]);
 /// }
 /// ```
-pub struct SJTEven<T: Clone> {
+///
+/// # Gotchas
+///
+/// * Order of generated permutations is not preserved across regenerations
+/// * It consumes the vector; we can optionally clone the vector first
+/// * It clones its internal representation for every iteration
+pub struct SJTEven<T: Clone + PartialOrd> {
+    /// Last generated permutation
     last_permutation: Vec<T>,
-    indices: Vec<usize>,
+    /// Direction of every element (0 = stay, +1 = move right, -1 = move left)
     directions: Vec<i8>,
+    /// Number of iterations
     count: usize
 }
 
-impl<T: Clone> SJTEven<T> {
+impl<T: Clone + PartialOrd> SJTEven<T> {
     pub fn new(sequence: Vec<T>) -> SJTEven<T> {
         SJTEven {
-            indices: sequence.iter().enumerate().map(|(i, _)| i).collect(),
+            // [0, -1, -1, -1, ...]
             directions: sequence.iter().enumerate()
                 .map(|(i, _)| if i == 0 { 0 } else { -1 }).collect(),
             last_permutation: sequence,
@@ -205,15 +212,65 @@ impl<T: Clone> SJTEven<T> {
     }
 }
 
-impl<T: Clone> Iterator for SJTEven<T> {
+impl<T: Clone + PartialOrd> Iterator for SJTEven<T> {
     type Item = Vec<T>;
 
     fn next(&mut self) -> Option<Self::Item> {
         self.count += 1;
         if self.count == 1 {
+            // Return the sequence itself as the first permutation.
             return Some(self.last_permutation.to_vec());
         }
-        None
+
+        // Find the largest/max element which has nonzero direction.
+        let mut max_i = 0;
+        let mut is_marked = false;
+        for (i, x) in self.last_permutation.iter().enumerate() {
+            if self.directions[i] != 0 {
+                is_marked = true;
+                if self.directions[max_i] == 0 || *x > self.last_permutation[max_i] {
+                    max_i = i;
+                }
+            }
+        }
+
+        // If none of the elements is marked with a direction, all permutations have been generated.
+        if ! is_marked {
+            // Reset state so it may regenerate all permutations.
+            self.directions[0] = 0;
+            for direction in self.directions.iter_mut().skip(1) {
+                *direction = -1;
+            }
+            self.count = 0;
+            return None;
+        }
+
+        // Swap the chosen element with the next element in its direction.
+        let old_max_i = max_i;
+        max_i = (max_i as isize + self.directions[max_i] as isize) as usize;
+        self.last_permutation.swap(max_i, old_max_i);
+        self.directions.swap(max_i, old_max_i);
+
+        // If the chosen element is at the first or last position,
+        // or the next element in its direction is larger than itself,
+        // set its direction to zero (stop moving it).
+        let last_i = self.last_permutation.len()-1;
+        let next_i = (max_i as isize + self.directions[max_i] as isize) as usize;
+        if max_i == 0 || max_i == last_i ||
+          self.last_permutation[next_i] > self.last_permutation[max_i]
+        {
+            self.directions[max_i] = 0;
+        }
+
+        // Find elements greater than the chosen element.
+        // Each element's direction is marked based on its position
+        // in relation to the chosen element.
+        for (i, x) in self.last_permutation.iter().enumerate() {
+            if *x > self.last_permutation[max_i] {
+                self.directions[i] = if i < max_i { 1 } else { -1 };
+            }
+        }
+        Some(self.last_permutation.to_vec())
     }
 }
 
@@ -230,11 +287,11 @@ mod sjt_tests {
     #[test]
     fn generate_the_first_ten_permutations() {
         let ten_permutations = [
-            [1, 2, 3, 4], [2, 1, 3, 4],
-            [3, 1, 2, 4], [1, 3, 2, 4],
-            [2, 3, 1, 4], [3, 2, 1, 4],
-            [4, 2, 1, 3], [2, 4, 1, 3],
-            [1, 4, 2, 3], [4, 1, 2, 3]
+            [1, 2, 3, 4], [1, 2, 4, 3],
+            [1, 4, 2, 3], [4, 1, 2, 3],
+            [4, 1, 3, 2], [1, 4, 3, 2],
+            [1, 3, 4, 2], [1, 3, 2, 4],
+            [3, 1, 2, 4], [3, 1, 4, 2]
         ];
 
         let sequence = vec![1, 2, 3, 4];
@@ -246,11 +303,11 @@ mod sjt_tests {
     #[test]
     fn generate_the_last_ten_permutations() {
         let ten_permutations = [
-            [4, 1, 3, 2], [1, 4, 3, 2],
-            [3, 4, 1, 2], [4, 3, 1, 2],
-            [4, 3, 2, 1], [3, 4, 2, 1],
+            [3, 2, 4, 1], [3, 2, 1, 4],
+            [2, 3, 1, 4], [2, 3, 4, 1],
             [2, 4, 3, 1], [4, 2, 3, 1],
-            [3, 2, 4, 1], [2, 3, 4, 1]
+            [4, 2, 1, 3], [2, 4, 1, 3],
+            [2, 1, 4, 3], [2, 1, 3, 4]
         ];
 
         let sequence = vec![1, 2, 3, 4];
