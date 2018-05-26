@@ -61,6 +61,12 @@ fn sequence_benchmark(c: &mut Criterion) {
         let mut gen = sequence::permutation::HeapGen::new(sequence);
         b.iter(|| gen.next())
     });
+
+    c.bench_function("sequence::permutation::SJTEven::new(sequence)", |b| {
+        let sequence: Vec<i32> = (-100..100).collect();
+        let mut gen = sequence::permutation::SJTEven::new(sequence);
+        b.iter(|| gen.next())
+    });
 }
 
 criterion_group!(benches, sequence_benchmark);
