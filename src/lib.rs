@@ -9,5 +9,4 @@ extern crate rand;
 pub mod sequence;
 
 #[cfg(test)]
-mod tests {
-}
+mod tests {}

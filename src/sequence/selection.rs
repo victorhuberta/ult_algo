@@ -42,7 +42,7 @@ pub fn quick_smallest<T: PartialOrd>(list: &mut [T], k: usize) -> &T {
             return quick_smallest(&mut list[..pivot_idx], k); // take the left side
         } else {
             // Take the right side and transform k to fit the new slice.
-            return quick_smallest(&mut list[pivot_idx+1..], k-pivot_idx-1);
+            return quick_smallest(&mut list[pivot_idx + 1..], k - pivot_idx - 1);
         }
     }
     &list[0] // only one possibility
@@ -81,7 +81,7 @@ mod quick_tests {
 /// Partitions a list based on the chosen pivot. Left side items are smaller than the pivot,
 /// while right side items are larger than or equal to the pivot.
 fn partition<T: PartialOrd>(list: &mut [T], pivot_idx: usize) -> usize {
-    let last_idx = list.len()-1;
+    let last_idx = list.len() - 1;
     let mut store_idx = 0;
 
     list.swap(pivot_idx, last_idx); // move pivot to end

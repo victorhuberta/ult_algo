@@ -39,7 +39,7 @@ pub struct HeapGen<T: Clone> {
     /// Last position of a permutation (to be swapped with elements indexed by self.swaps)
     n: usize,
     /// Number of iterations
-    count: usize
+    count: usize,
 }
 
 impl<T: Clone> HeapGen<T> {
@@ -48,7 +48,7 @@ impl<T: Clone> HeapGen<T> {
             swaps: vec![0; sequence.len()],
             last_permutation: sequence,
             n: 0,
-            count: 0
+            count: 0,
         }
     }
 }
@@ -108,11 +108,16 @@ mod heap_tests {
     #[test]
     fn generate_the_first_ten_permutations() {
         let ten_permutations = [
-            [1, 2, 3, 4], [2, 1, 3, 4],
-            [3, 1, 2, 4], [1, 3, 2, 4],
-            [2, 3, 1, 4], [3, 2, 1, 4],
-            [4, 2, 1, 3], [2, 4, 1, 3],
-            [1, 4, 2, 3], [4, 1, 2, 3]
+            [1, 2, 3, 4],
+            [2, 1, 3, 4],
+            [3, 1, 2, 4],
+            [1, 3, 2, 4],
+            [2, 3, 1, 4],
+            [3, 2, 1, 4],
+            [4, 2, 1, 3],
+            [2, 4, 1, 3],
+            [1, 4, 2, 3],
+            [4, 1, 2, 3],
         ];
 
         let sequence = vec![1, 2, 3, 4];
@@ -124,11 +129,16 @@ mod heap_tests {
     #[test]
     fn generate_the_last_ten_permutations() {
         let ten_permutations = [
-            [4, 1, 3, 2], [1, 4, 3, 2],
-            [3, 4, 1, 2], [4, 3, 1, 2],
-            [4, 3, 2, 1], [3, 4, 2, 1],
-            [2, 4, 3, 1], [4, 2, 3, 1],
-            [3, 2, 4, 1], [2, 3, 4, 1]
+            [4, 1, 3, 2],
+            [1, 4, 3, 2],
+            [3, 4, 1, 2],
+            [4, 3, 1, 2],
+            [4, 3, 2, 1],
+            [3, 4, 2, 1],
+            [2, 4, 3, 1],
+            [4, 2, 3, 1],
+            [3, 2, 4, 1],
+            [2, 3, 4, 1],
         ];
 
         let sequence = vec![1, 2, 3, 4];
@@ -197,17 +207,20 @@ pub struct SJTEven<T: Clone + PartialOrd> {
     /// Direction of every element (0 = stay, +1 = move right, -1 = move left)
     directions: Vec<i8>,
     /// Number of iterations
-    count: usize
+    count: usize,
 }
 
 impl<T: Clone + PartialOrd> SJTEven<T> {
     pub fn new(sequence: Vec<T>) -> SJTEven<T> {
         SJTEven {
             // [0, -1, -1, -1, ...]
-            directions: sequence.iter().enumerate()
-                .map(|(i, _)| if i == 0 { 0 } else { -1 }).collect(),
+            directions: sequence
+                .iter()
+                .enumerate()
+                .map(|(i, _)| if i == 0 { 0 } else { -1 })
+                .collect(),
             last_permutation: sequence,
-            count: 0
+            count: 0,
         }
     }
 }
@@ -235,7 +248,7 @@ impl<T: Clone + PartialOrd> Iterator for SJTEven<T> {
         }
 
         // If none of the elements is marked with a direction, all permutations have been generated.
-        if ! is_marked {
+        if !is_marked {
             // Reset state so it may regenerate all permutations.
             self.directions[0] = 0;
             for direction in self.directions.iter_mut().skip(1) {
@@ -254,10 +267,11 @@ impl<T: Clone + PartialOrd> Iterator for SJTEven<T> {
         // If the chosen element is at the first or last position,
         // or the next element in its direction is larger than itself,
         // set its direction to zero (stop moving it).
-        let last_i = self.last_permutation.len()-1;
+        let last_i = self.last_permutation.len() - 1;
         let next_i = (max_i as isize + self.directions[max_i] as isize) as usize;
-        if max_i == 0 || max_i == last_i ||
-          self.last_permutation[next_i] > self.last_permutation[max_i]
+        if max_i == 0
+            || max_i == last_i
+            || self.last_permutation[next_i] > self.last_permutation[max_i]
         {
             self.directions[max_i] = 0;
         }
@@ -287,11 +301,16 @@ mod sjt_tests {
     #[test]
     fn generate_the_first_ten_permutations() {
         let ten_permutations = [
-            [1, 2, 3, 4], [1, 2, 4, 3],
-            [1, 4, 2, 3], [4, 1, 2, 3],
-            [4, 1, 3, 2], [1, 4, 3, 2],
-            [1, 3, 4, 2], [1, 3, 2, 4],
-            [3, 1, 2, 4], [3, 1, 4, 2]
+            [1, 2, 3, 4],
+            [1, 2, 4, 3],
+            [1, 4, 2, 3],
+            [4, 1, 2, 3],
+            [4, 1, 3, 2],
+            [1, 4, 3, 2],
+            [1, 3, 4, 2],
+            [1, 3, 2, 4],
+            [3, 1, 2, 4],
+            [3, 1, 4, 2],
         ];
 
         let sequence = vec![1, 2, 3, 4];
@@ -303,11 +322,16 @@ mod sjt_tests {
     #[test]
     fn generate_the_last_ten_permutations() {
         let ten_permutations = [
-            [3, 2, 4, 1], [3, 2, 1, 4],
-            [2, 3, 1, 4], [2, 3, 4, 1],
-            [2, 4, 3, 1], [4, 2, 3, 1],
-            [4, 2, 1, 3], [2, 4, 1, 3],
-            [2, 1, 4, 3], [2, 1, 3, 4]
+            [3, 2, 4, 1],
+            [3, 2, 1, 4],
+            [2, 3, 1, 4],
+            [2, 3, 4, 1],
+            [2, 4, 3, 1],
+            [4, 2, 3, 1],
+            [4, 2, 1, 3],
+            [2, 4, 1, 3],
+            [2, 1, 4, 3],
+            [2, 1, 3, 4],
         ];
 
         let sequence = vec![1, 2, 3, 4];

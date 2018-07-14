@@ -1,6 +1,8 @@
-#[macro_use] extern crate criterion;
+#[macro_use]
+extern crate criterion;
 extern crate rand;
-#[macro_use] extern crate ult_algo;
+#[macro_use]
+extern crate ult_algo;
 
 use criterion::Criterion;
 use rand::Rng;
@@ -14,32 +16,50 @@ fn sequence_benchmark(c: &mut Criterion) {
         b.iter(|| sequence::match_::bitap(&sequence_, &pattern))
     });
 
-    let source: Vec<char> = "sitting in my kitchen like a boss knitting its scarf".chars().collect();
-    let target: Vec<char> = "kittens love sitting on the knit of my scarf in my kitchen".chars().collect();
-    c.bench_function("sequence::match_::levenshtein_distance(&source, &target)", move |b| {
-        b.iter(|| sequence::match_::levenshtein_distance(&source, &target))
-    });
+    let source: Vec<char> = "sitting in my kitchen like a boss knitting its scarf"
+        .chars()
+        .collect();
+    let target: Vec<char> = "kittens love sitting on the knit of my scarf in my kitchen"
+        .chars()
+        .collect();
+    c.bench_function(
+        "sequence::match_::levenshtein_distance(&source, &target)",
+        move |b| b.iter(|| sequence::match_::levenshtein_distance(&source, &target)),
+    );
 
-    c.bench_function("sequence::selection::quick_smallest(&mut sequence, k)", |b| {
-        let mut sequence_: Vec<i32> = (-100..100).collect();
-        rand::thread_rng().shuffle(&mut sequence_);
-        b.iter(|| *sequence::selection::quick_smallest(&mut sequence_, 100))
-    });
+    c.bench_function(
+        "sequence::selection::quick_smallest(&mut sequence, k)",
+        |b| {
+            let mut sequence_: Vec<i32> = (-100..100).collect();
+            rand::thread_rng().shuffle(&mut sequence_);
+            b.iter(|| *sequence::selection::quick_smallest(&mut sequence_, 100))
+        },
+    );
 
-    c.bench_function("sequence::search::ternary(search_target, |x| x.powf(x), 50.0, 1000.0, 0.0001)", |b| {
-        b.iter(|| {
-            sequence::search::ternary(sequence::search::SearchTarget::Maximum,
-                |x| x.powf(x), 50.0, 1000.0, 0.0001)
-        })
-    });
+    c.bench_function(
+        "sequence::search::ternary(search_target, |x| x.powf(x), 50.0, 1000.0, 0.0001)",
+        |b| {
+            b.iter(|| {
+                sequence::search::ternary(
+                    sequence::search::SearchTarget::Maximum,
+                    |x| x.powf(x),
+                    50.0,
+                    1000.0,
+                    0.0001,
+                )
+            })
+        },
+    );
 
-    c.bench_function("sequence::search::ternary_min!(|x| x.powf(x), 50.0, 1000.0, 0.0001)", |b| {
-        b.iter(|| ternary_min!(|x| x.powf(x), 50.0, 1000.0, 0.0001))
-    });
+    c.bench_function(
+        "sequence::search::ternary_min!(|x| x.powf(x), 50.0, 1000.0, 0.0001)",
+        |b| b.iter(|| ternary_min!(|x| x.powf(x), 50.0, 1000.0, 0.0001)),
+    );
 
-    c.bench_function("sequence::search::ternary_max!(|x| x.powf(x), 50.0, 1000.0, 0.0001)", |b| {
-        b.iter(|| ternary_max!(|x| x.powf(x), 50.0, 1000.0, 0.0001))
-    });
+    c.bench_function(
+        "sequence::search::ternary_max!(|x| x.powf(x), 50.0, 1000.0, 0.0001)",
+        |b| b.iter(|| ternary_max!(|x| x.powf(x), 50.0, 1000.0, 0.0001)),
+    );
 
     let sequence: Vec<i32> = (-100..100).collect();
     c.bench_function("sequence::search::binary(&sequence, &868)", move |b| {
@@ -52,9 +72,10 @@ fn sequence_benchmark(c: &mut Criterion) {
     });
 
     let sequence: Vec<i32> = (-100..100).collect();
-    c.bench_function("sequence::search::interpolation(&sequence, &99)", move |b| {
-        b.iter(|| sequence::search::interpolation(&sequence, &99))
-    });
+    c.bench_function(
+        "sequence::search::interpolation(&sequence, &99)",
+        move |b| b.iter(|| sequence::search::interpolation(&sequence, &99)),
+    );
 
     c.bench_function("sequence::permutation::HeapGen::new(sequence)", |b| {
         let sequence: Vec<i32> = (-100..100).collect();
